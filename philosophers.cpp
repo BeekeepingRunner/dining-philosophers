@@ -1,4 +1,5 @@
 #include "Philosophers.h"
+#include "colours.h"
 
 #include <iostream>
 #include <thread>
@@ -8,9 +9,9 @@
 
 constexpr int MAX_DELAY{ 1000 };
 
-std::random_device rd7;
-std::minstd_rand generator7(rd7());
-std::uniform_int_distribution<int> rozklad7(0, MAX_DELAY);
+std::random_device rd;
+std::minstd_rand generator(rd());
+std::uniform_int_distribution<int> distribution(0, MAX_DELAY);
 
 const int PHILOSOPHERS_COUNT{ 5 };
 const int MEALS_COUNT{ 3 };
@@ -46,23 +47,24 @@ void wyswietlZeSkonczyl(std::string k, std::string r, int nr, int zjedzonychPosi
     info = "";
 }
 */
-void eatDisplay(int nr, int mealsEaten, int mealTime)
+void eatDisplay(int nr, int mealsEaten, int mealTime, std::string colour)
 {
     std::string info = "";
-    info.append("Philosopher ").append(std::to_string(nr)).append(" eats ")
+    info.append(colour).append("Philosopher ").append(std::to_string(nr)).append(" eats ")
         .append(std::to_string(mealsEaten))
         .append(". meal for ")
-        .append(std::to_string(mealTime)).append(" ms\n");
+        .append(std::to_string(mealTime))
+        .append(" ms\n").append(Colour::reset());
 
     std::cout << info;
 }
 
-void finishedMealDisplay(int nr, int mealsEaten)
+void finishedMealDisplay(int nr, int mealsEaten, std::string colour)
 {
     std::string info = "";
-    info.append("Philosopher ").append(std::to_string(nr))
+    info.append(colour).append("Philosopher ").append(std::to_string(nr))
         .append(" finished eating ").append(std::to_string(mealsEaten))
-        .append(". meal\n");
+        .append(". meal\n").append(Colour::reset());
 
     std::cout << info;
 }
@@ -82,14 +84,11 @@ void wyswietlZeOdklada(int nrFilozofa, const Widelec& w)
 
 void Philosopher::operator()()
 {
-    // std::string k{ Kolor::nastepny() };
-    // std::string r{ Kolor::reset() };
-    // std::string info{ "" };
+    std::string colour{ Colour::next() };
 
     while (mealsEaten < MEALS_COUNT)
     {
-        // std::cout << "SEMAFOR KELNER LICZNIK: " << semaforKelner.wartoscLicznika() << '\n';
-        int mealTime = rozklad7(generator7);
+        int mealTime = distribution(generator);
 
         // wyswietlZePodnosi(this->numer, lewyWidelec);
         waiterSemaphore.wait();
@@ -98,7 +97,7 @@ void Philosopher::operator()()
         rightHandFork.lift();
 
         ++(this->mealsEaten);
-        eatDisplay(this->number, this->mealsEaten, mealTime);
+        eatDisplay(this->number, this->mealsEaten, mealTime, colour);
         // wyswietlZeJe(k, r, this->numer, zjedzonychPosilkow, czasPosilku);
         std::this_thread::sleep_for(std::chrono::milliseconds(mealTime));
 
@@ -109,7 +108,7 @@ void Philosopher::operator()()
         waiterSemaphore.signalize();
 
         //wyswietlZeSkonczyl(k, r, this->numer, zjedzonychPosilkow);
-        finishedMealDisplay(this->number, this->mealsEaten);
+        finishedMealDisplay(this->number, this->mealsEaten, colour);
     }
 
     std::string info = "";

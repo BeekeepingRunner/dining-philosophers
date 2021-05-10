@@ -1,3 +1,4 @@
+#include "colours.h"
 #include "Philosophers.h"
 #include "Semaphore.h"
 
@@ -37,6 +38,6 @@ int main()
     }
 
     std::cout << "All philosophers are full!\n";
-
+    
 	return 0;
 }
