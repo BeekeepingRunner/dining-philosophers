@@ -1,1 +1,1 @@
-# Representation of a dining philosophers problem
+# Representation of the dining philosophers problem
