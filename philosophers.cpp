@@ -23,34 +23,10 @@ Philosopher::Philosopher(int n, Fork& left, Fork& right, WaiterSemaphore& waiter
 
 // DISPLAY HELPER FUNCTIONS ==========================
 //
-/*
-void wyswietlZeJe(std::string k, std::string r, int nr, int zjedzonychPosilkow, int czasPosilku)
-{
-    std::string info = "";
-    info.append(k)
-        .append("Filozof ").append(std::to_string(nr)).append(" je ")
-        .append(std::to_string(zjedzonychPosilkow))
-        .append(" posi³ek przez najbli¿sze ")
-        .append(std::to_string(czasPosilku)).append(" ms\n").append(r);
-
-    std::cout << info;
-}
-
-void wyswietlZeSkonczyl(std::string k, std::string r, int nr, int zjedzonychPosilkow)
-{
-    std::string info = "";
-    info.append(k).append("Filozof ").append(std::to_string(nr))
-        .append(" skoñczy³ jeœæ ").append(std::to_string(zjedzonychPosilkow))
-        .append(" posi³ek\n").append(r);
-
-    std::cout << info;
-    info = "";
-}
-*/
 void eatDisplay(int nr, int mealsEaten, int mealTime, std::string colour)
 {
     std::string info = "";
-    info.append(colour).append("Philosopher ").append(std::to_string(nr)).append(" eats ")
+    info.append(colour).append("Philosopher_").append(std::to_string(nr)).append(" eats ")
         .append(std::to_string(mealsEaten))
         .append(". meal for ")
         .append(std::to_string(mealTime))
@@ -62,26 +38,35 @@ void eatDisplay(int nr, int mealsEaten, int mealTime, std::string colour)
 void finishedMealDisplay(int nr, int mealsEaten, std::string colour)
 {
     std::string info = "";
-    info.append(colour).append("Philosopher ").append(std::to_string(nr))
+    info.append(colour).append("Philosopher_").append(std::to_string(nr))
         .append(" finished eating ").append(std::to_string(mealsEaten))
         .append(". meal\n").append(Colour::reset());
 
     std::cout << info;
 }
 
-/*
-void wyswietlZePodnosi(int nrFilozofa, const Widelec& w)
+
+void displayForkLift(int philosopherNum, const Fork& f)
 {
-    std::cout << "Filozof " + std::to_string(nrFilozofa) + " podnosi w" + std::to_string(w.podajNr()) + "\n";
+    std::cout << "\tPhilosopher_" + std::to_string(philosopherNum) + " lifts fork_" + std::to_string(f.getNr()) + "\n";
 }
 
-void wyswietlZeOdklada(int nrFilozofa, const Widelec& w)
+void displayForkPutoff(int philosopherNum, const Fork& f)
 {
-    std::cout << "Filozof " + std::to_string(nrFilozofa) + " odk³ada w" + std::to_string(w.podajNr()) + "\n";
+    std::cout << "\tPhilosopher_ " + std::to_string(philosopherNum) + " puts off fork_" + std::to_string(f.getNr()) + "\n";
 }
-*/
+
 // ==========================
 
+// Philosopher eats a few meals, each time:
+// lifting left hand fork first, assuming that it is available
+// (if not, he waits for other philosopher to put it off),
+// then lifting right hand fork in the same way.
+// He then eats (thread is sleeping), which takes some time (based on a given mealTime),
+// and puts off forks, left one first again.
+//
+// Waiter (semaphore) makes sure if the are maximally 4 philosophers eating at the same time
+// to avoid deadlock.
 void Philosopher::operator()()
 {
     std::string colour{ Colour::next() };
@@ -90,24 +75,24 @@ void Philosopher::operator()()
     {
         int mealTime = distribution(generator);
 
-        // wyswietlZePodnosi(this->numer, lewyWidelec);
         waiterSemaphore.wait();
+
+        displayForkLift(this->number, leftHandFork);
         leftHandFork.lift();
-        // wyswietlZePodnosi(this->numer, prawyWidelec);
+        displayForkLift(this->number, rightHandFork);
         rightHandFork.lift();
 
         ++(this->mealsEaten);
         eatDisplay(this->number, this->mealsEaten, mealTime, colour);
-        // wyswietlZeJe(k, r, this->numer, zjedzonychPosilkow, czasPosilku);
         std::this_thread::sleep_for(std::chrono::milliseconds(mealTime));
 
-        // wyswietlZeOdklada(this->numer, lewyWidelec);
+        displayForkPutoff(this->number, leftHandFork);
         leftHandFork.putOff();
-        // wyswietlZeOdklada(this->numer, prawyWidelec);
+        displayForkPutoff(this->number, rightHandFork);
         rightHandFork.putOff();
+
         waiterSemaphore.signalize();
 
-        //wyswietlZeSkonczyl(k, r, this->numer, zjedzonychPosilkow);
         finishedMealDisplay(this->number, this->mealsEaten, colour);
     }
 
@@ -120,7 +105,6 @@ void Philosopher::operator()()
 void Fork::lift()
 {
     semaphore.wait();
-
     lifted = true;
 }
 

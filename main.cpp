@@ -19,6 +19,7 @@ int main()
 
     for (int i = 0; i < 1; ++i)
     {
+        // philosophers eat
         philosophers.emplace_back(Philosopher(0, w0, w1, waiter));
         philosophers.emplace_back(Philosopher(1, w1, w2, waiter));
         philosophers.emplace_back(Philosopher(2, w2, w3, waiter));
